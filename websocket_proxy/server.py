@@ -127,6 +127,16 @@ class WebSocketProxy:
         # connection_manager.SharedZmqPublisher.connect.
         ZMQ_HOST = os.getenv("ZMQ_HOST", "127.0.0.1")
         ZMQ_PORT = os.getenv("ZMQ_PORT", "5555")
+        if is_port_in_use(ZMQ_HOST, int(ZMQ_PORT), wait_time=2.0):
+            error_msg = (
+                f"ZeroMQ port {ZMQ_PORT} is already in use on {ZMQ_HOST}.\n"
+                f"Please:\n"
+                f"1. Stop any other OpenAlgo instances running on port {ZMQ_PORT}\n"
+                f"2. Kill any processes using port {ZMQ_PORT}: lsof -ti:{ZMQ_PORT} | xargs kill -9\n"
+                f"3. Or wait for the port to be released"
+            )
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
         self.socket.bind(f"tcp://{ZMQ_HOST}:{ZMQ_PORT}")
 
         # Receive all topics (market data + CACHE_INVALIDATE_*)
