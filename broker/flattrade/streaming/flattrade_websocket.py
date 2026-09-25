@@ -213,14 +213,12 @@ class FlattradeWebSocket:
     # WebSocket Event Handlers
     def _on_open(self, ws) -> None:
         """Handle WebSocket connection open event"""
-        self.connected = True
         self._update_last_message_time()
 
         self.logger.info("WebSocket connection opened, sending authentication")
 
-        if self._send_authentication():
-            self._start_heartbeat()
-            self._call_external_callback(self.on_open, ws)
+        if not self._send_authentication():
+            self.logger.error("Failed to send initial authentication message")
 
     def _send_authentication(self) -> bool:
         """
@@ -291,8 +289,13 @@ class FlattradeWebSocket:
             bool: True (message handled)
         """
         if data.get("s") == self.AUTH_SUCCESS:
+            self.connected = True
             self.logger.info("Authentication successful")
+            self._start_heartbeat()
+            ws = self.ws
+            self._call_external_callback(self.on_open, ws)
         else:
+            self.connected = False
             self.logger.error(f"Authentication failed: {data}")
             self.auth_failed = True
             self.auth_failure_message = str(data.get("emsg") or data.get("s") or "unknown reason")

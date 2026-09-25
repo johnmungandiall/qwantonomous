@@ -439,14 +439,11 @@ export class MarketDataManager {
         }
 
         // Track consecutive failures for fallback trigger
-        if (!event.wasClean) {
-          this.consecutiveFailures++
-        }
+        this.consecutiveFailures++
 
-        // Auto-reconnect if not clean close and not paused
+        // Auto-reconnect if enabled and not paused (regardless of whether server close was clean)
         if (
           this.autoReconnect &&
-          !event.wasClean &&
           this.connectionState !== 'paused' &&
           this.reconnectAttempts < this.maxReconnectAttempts
         ) {

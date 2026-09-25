@@ -91,7 +91,12 @@ _BROKER_FACTORIES: dict[str, tuple[str, str]] = {
 # updates onto the market-data socket instead is not viable either: that adapter
 # runs in the websocket_proxy *subprocess* under gunicorn+eventlet and Docker, so
 # the OrderUpdateEvent would be published on the wrong process's event bus.
-_POLLING_BROKERS = {"groww", "fivepaisa", "samco"}
+# flattrade: Flattrade's PiConnectWSAPI permits only ONE WebSocket connection
+# per user account (uid). When a dedicated order-update socket connects, Flattrade
+# evicts the market-data socket (opcode 8 / 1000 close frame), and reconnecting
+# market data evicts the order-update socket in an endless loop. Switching to
+# REST polling keeps market data connected uninterrupted.
+_POLLING_BROKERS = {"groww", "fivepaisa", "samco", "flattrade"}
 
 # user_id -> live adapter (BaseOrderUpdateAdapter or PollingOrderUpdateAdapter)
 _ADAPTERS: dict[str, object] = {}
